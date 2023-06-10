@@ -71,7 +71,7 @@ async function run() {
 
         const classesCollection = client.db('EmaGraphy').collection('classes');
         const usersCollection = client.db('EmaGraphy').collection('users');
-        const instructorsCollection = client.db('EmaGraphy').collection('instructors');
+        // const instructorsCollection = client.db('EmaGraphy').collection('instructors');
 
 
         // jwtprotect
@@ -123,6 +123,18 @@ async function run() {
                 }
             };
             const result = await usersCollection.updateOne(filter, role);
+            res.send(result);
+        });
+
+        // admin verify by email
+        app.get('/users/admin/:email', async (req, res) => {
+            const email = req.decoded?.email;
+            if (req.decoded?.email !== email) {
+                res.status(401).send({ error: true, message: 'invalid access' })
+            }
+            const filter = { email: email };
+            const user = await usersCollection.findOne(filter);
+            const result = { admin: user?.role === 'admin' };
             res.send(result);
         });
 
