@@ -45,8 +45,33 @@ async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
+        // Admin verify
+        const isAdmin = async (req, res, next) => {
+            const email = req.decoded.email;
+            const filter = { email: email };
+            const users = await usersCollection.findOne(filter);
+            if (users?.role !== 'admin') {
+                res.status(403).send({ error: true, message: 'forbidden access' })
+            }
+            next();
+        };
+
+        // instructor verify
+        const isInstructor = async (req, res, next) => {
+            const email = req.decoded.email;
+            const filter = { email: email };
+            const users = await usersCollection.findOne(filter);
+            if (users?.role !== 'instructor') {
+                res.status(403).send({ error: true, message: 'forbidden access' })
+            }
+            next();
+        }
+
+
+
         const classesCollection = client.db('EmaGraphy').collection('classes');
         const usersCollection = client.db('EmaGraphy').collection('users');
+        const instructorsCollection = client.db('EmaGraphy').collection('instructors');
 
 
         // jwtprotect
@@ -112,7 +137,16 @@ async function run() {
             };
             const result = await usersCollection.updateOne(filter, role);
             res.send(result);
-        })
+        });
+
+        // app.post('/instructors', async (req, res) => {
+        //     const user = req.body;
+        //     const filter = user?.role === 'instructor';
+        //     const query = await usersCollection.find(filter).toArray();
+        //     const result = await instructorsCollection.insertOne(query);
+        //     console.log(result);
+        //     res.send(result);
+        // })
 
 
         // Send a ping to confirm a successful connection
