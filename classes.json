@@ -1,0 +1,56 @@
+[
+    {
+        "class_name": "Landscape Photography",
+        "image": "https://media.istockphoto.com/id/1093110112/photo/picturesque-morning-in-plitvice-national-park-colorful-spring-scene-of-green-forest-with-pure.jpg?s=612x612&w=0&k=20&c=lpQ1sQI49bYbTp9WQ_EfVltAqSP1DXg0Ia7APTjjxz4=",
+        "instructor_name": "John Smith",
+        "instructor_email": "john@example.com",
+        "seats": 20,
+        "price": 49.99,
+        "status": "pending"
+    },
+    {
+        "class_name": "Portrait Photography",
+        "image": "https://img.freepik.com/free-photo/pretty-smiling-joyfully-female-with-fair-hair-dressed-casually-looking-with-satisfaction_176420-15187.jpg",
+        "instructor_name": "Emily Johnson",
+        "instructor_email": "emily@example.com",
+        "seats": 15,
+        "price": 59.99,
+        "status": "approved"
+    },
+    {
+        "class_name": "Wildlife Photography",
+        "image": "https://iso.500px.com/wp-content/uploads/2015/03/cover_2048.jpg",
+        "instructor_name": "David Wilson",
+        "instructor_email": "david@example.com",
+        "seats": 10,
+        "price": 69.99,
+        "status": "denied"
+    },
+    {
+        "class_name": "Street Photography",
+        "image": "https://i0.wp.com/digital-photography-school.com/wp-content/uploads/2021/03/street-photography-images-2.jpg?resize=600%2C400&ssl=1",
+        "instructor_name": "Sarah Thompson",
+        "instructor_email": "sarah@example.com",
+        "seats": 25,
+        "price": 39.99,
+        "status": "approved"
+    },
+    {
+        "class_name": "Product Photography",
+        "image": "https://blog.hubspot.com/hubfs/guide%20to%20product%20photography.jpg",
+        "instructor_name": "Michael Davis",
+        "instructor_email": "michael@example.com",
+        "seats": 18,
+        "price": 54.99,
+        "status": "pending"
+    },
+    {
+        "class_name": "Night Photography",
+        "image": "https://i0.wp.com/digital-photography-school.com/wp-content/uploads/2018/06/Nighttime-photography-02.jpg?fit=1500%2C1061&ssl=1",
+        "instructor_name": "Laura Adams",
+        "instructor_email": "laura@example.com",
+        "seats": 12,
+        "price": 44.99,
+        "status": "pending"
+    }
+]
