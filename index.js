@@ -138,6 +138,18 @@ async function run() {
             res.send(result);
         });
 
+        //  instructor verify by email
+        app.get('/users/admin/:email', async (req, res) => {
+            const email = req.decoded?.email;
+            if (req.decoded?.email !== email) {
+                res.status(401).send({ error: true, message: 'invalid access' })
+            }
+            const filter = { email: email };
+            const user = await usersCollection.findOne(filter);
+            const result = { instructor: user?.role === 'instructor' };
+            res.send(result);
+        });
+
         // make instructors
         app.patch('/users/instructor/:id', async (req, res) => {
             const id = req.params.id;
