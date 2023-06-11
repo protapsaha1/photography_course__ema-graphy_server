@@ -1,6 +1,7 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const stripe = require("stripe")(process.env.PAYMENT_SECRET);
 const cors = require("cors");
 const app = express();
 require("dotenv").config();
@@ -34,9 +35,9 @@ const verifyUser = (req, res, next) => {
     const token = authorization.split(' ')[1]
     jwt.verify(token, process.env.USER_ACCESS_VERIFY_TOKEN, (err, decoded) => {
         if (err) {
-            res.status(401).send({ error: true, message: 'unauthorize access' });
+            return res.status(401).send({ error: true, message: 'unauthorize access' });
         }
-        decoded = req.decoded;
+        req.decoded = decoded;
         next();
     })
 }
@@ -94,7 +95,33 @@ async function run() {
         app.get('/classes', async (req, res) => {
             const result = await classesCollection.find().toArray();
             res.send(result);
-        })
+        });
+
+        // update classes status approved
+        app.put('/classes/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const status = {
+                $set: {
+                    status: "approved"
+                }
+            };
+            const result = await classesCollection.updateOne(filter, status);
+            res.send(result);
+        });
+        // update classes status approved
+        app.put('/classes/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const status = {
+                $set: {
+                    status: "denied"
+                }
+            };
+            const result = await classesCollection.updateOne(filter, status);
+            res.send(result);
+        });
+
         // users post
         app.post('/users', async (req, res) => {
             const users = req.body;
@@ -187,8 +214,17 @@ async function run() {
 
         // get bookings  class
         app.get('/bookedClass', verifyUser, async (req, res) => {
+            const email = req.query?.email;
+            if (!email) {
+                return res.send([])
+            }
+            const decodeEmail = req.decoded?.email;
+            if (email !== decodeEmail) {
+                return res.status(403).send({ error: true, message: 'forbidden access' })
+            }
             const bookedClass = req.body;
-            const result = await bookingsClassCollection.find(bookedClass).toArray();
+            const filter = { email: email };
+            const result = await bookingsClassCollection.find(filter, bookedClass).toArray();
             res.send(result);
         });
 
