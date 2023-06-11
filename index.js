@@ -27,9 +27,9 @@ const client = new MongoClient(uri, {
 
 
 const verifyUser = (req, res, next) => {
-    const authorization = req.Headers.authorization;
+    const authorization = req.headers.authorization;
     if (!authorization) {
-        res.status(401).send({ error: true, message: 'unauthorize access' });
+        return res.status(401).send({ error: true, message: 'unauthorize access' });
     }
     const token = authorization.split(' ')[1]
     jwt.verify(token, process.env.USER_ACCESS_VERIFY_TOKEN, (err, decoded) => {
@@ -51,7 +51,7 @@ async function run() {
             const filter = { email: email };
             const users = await usersCollection.findOne(filter);
             if (users?.role !== 'admin') {
-                res.status(403).send({ error: true, message: 'forbidden access' })
+                return res.status(403).send({ error: true, message: 'forbidden access' })
             }
             next();
         };
@@ -62,7 +62,7 @@ async function run() {
             const filter = { email: email };
             const users = await usersCollection.findOne(filter);
             if (users?.role !== 'instructor') {
-                res.status(403).send({ error: true, message: 'forbidden access' })
+                return res.status(403).send({ error: true, message: 'forbidden access' })
             }
             next();
         }
@@ -71,7 +71,8 @@ async function run() {
 
         const classesCollection = client.db('EmaGraphy').collection('classes');
         const usersCollection = client.db('EmaGraphy').collection('users');
-        // const instructorsCollection = client.db('EmaGraphy').collection('instructors');
+        const instructorsCollection = client.db('EmaGraphy').collection('instructors');
+        const bookingsClassCollection = client.db('EmaGraphy').collection('bookingsClass');
 
 
         // jwtprotect
@@ -86,7 +87,7 @@ async function run() {
         // post classes
         app.post('/classes', async (req, res) => {
             const classes = req.body;
-            const result = await classesCollection.insertOne(classes);
+            const result = await classesCollection.insertOne(classes); xc
             res.send(result);
         })
         // classes get
@@ -97,10 +98,10 @@ async function run() {
         // users post
         app.post('/users', async (req, res) => {
             const users = req.body;
-            const query = { email: users?.email }
-            const LoginUser = await usersCollection.findOne(query);
-            if (LoginUser) {
-                res.send({ message: 'You are existed' })
+            const query = { email: users.email };
+            const isLoginUser = await usersCollection.findOne(query);
+            if (isLoginUser) {
+                return res.send({ message: 'You are existed' })
             }
             const result = await usersCollection.insertOne(users);
             res.send(result);
@@ -130,7 +131,7 @@ async function run() {
         app.get('/users/admin/:email', async (req, res) => {
             const email = req.decoded?.email;
             if (req.decoded?.email !== email) {
-                res.status(401).send({ error: true, message: 'invalid access' })
+                return res.status(401).send({ error: true, message: 'invalid access' })
             }
             const filter = { email: email };
             const user = await usersCollection.findOne(filter);
@@ -139,10 +140,10 @@ async function run() {
         });
 
         //  instructor verify by email
-        app.get('/users/admin/:email', async (req, res) => {
+        app.get('/users/instructor/:email', async (req, res) => {
             const email = req.decoded?.email;
             if (req.decoded?.email !== email) {
-                res.status(401).send({ error: true, message: 'invalid access' })
+                return res.status(401).send({ error: true, message: 'invalid access' })
             }
             const filter = { email: email };
             const user = await usersCollection.findOne(filter);
@@ -163,14 +164,41 @@ async function run() {
             res.send(result);
         });
 
-        // app.post('/instructors', async (req, res) => {
-        //     const user = req.body;
-        //     const filter = user?.role === 'instructor';
-        //     const query = await usersCollection.find(filter).toArray();
-        //     const result = await instructorsCollection.insertOne(query);
-        //     console.log(result);
-        //     res.send(result);
-        // })
+        // instructors route
+        app.get('/instructors', async (req, res) => {
+            const user = req.decoded;
+            if (user?.role !== 'instructor') {
+                return res.send({ message: 'invalid access' })
+            }
+            console.log(user)
+            const query = await usersCollection.find(filter).toArray();
+            const result = await instructorsCollection.insertOne(query);
+            console.log(result);
+            res.send(result);
+        })
+
+
+        // bookings class
+        app.post('/bookedClass', async (req, res) => {
+            const bookedClass = req.body;
+            const result = await bookingsClassCollection.insertOne(bookedClass);
+            res.send(result);
+        })
+
+        // get bookings  class
+        app.get('/bookedClass', verifyUser, async (req, res) => {
+            const bookedClass = req.body;
+            const result = await bookingsClassCollection.find(bookedClass).toArray();
+            res.send(result);
+        });
+
+        // delete bookedClass
+        app.delete('/bookedClass/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await bookingsClassCollection.deleteOne(query);
+            res.send(result);
+        })
 
 
         // Send a ping to confirm a successful connection
