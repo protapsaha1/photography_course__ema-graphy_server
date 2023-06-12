@@ -112,7 +112,6 @@ async function run() {
             const instructorEmail = user.email;
             const email = { instructor_email: instructorEmail };
             const result = await classesCollection.find(email).toArray();
-            console.log(result)
             res.send(result);
         })
 
@@ -229,24 +228,22 @@ async function run() {
         });
 
         // instructors route 
-        app.get('/instructors', async (req, res) => {
-            // const instructorEmail = await classesCollection.distinct('instructor', { role: 'instructor' });
-            // const email = await usersCollection.find({ email: { $in: instructorEmail }, role: 'instructor' }).toArray();
-            // const classInfo = await classesCollection.find({ instructor: { $in: instructorEmail } }).toArray();
-            // const classesAndInstructor = classInfo.map((items) => {
-            //     const instructor = email.find(inst => inst.email === items.instructor);
-            //     return { ...items, instructor };
-            // });
-            // console.log(classesAndInstructor)
+        app.post('/instructors', async (req, res) => {
             const instructorRole = { role: 'instructor' };
+
             if (!instructorRole) {
-                return res.status(500).send([])
-            }
+                return res.status(500).send([]);
+            };
+
             const instructors = await usersCollection.find(instructorRole).toArray();
-            // const result = await instructorsCollection.insertMany(instructors);
-            // const result = await instructorsCollection.find().toArray();
-            console.log('instructors', instructors)
-            res.send(instructors);
+            const results = await instructorsCollection.insertMany(instructors);
+            res.send(results);
+        });
+
+        app.get('/instructors', async (req, res) => {
+            const results = await instructorsCollection.find().toArray();
+            console.log('data', results)
+            res.send(results);
         })
 
         // -------------------------------------------------------------------bookings Classes--------------------------------------------------------
