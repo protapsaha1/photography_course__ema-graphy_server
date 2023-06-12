@@ -97,10 +97,24 @@ async function run() {
             res.send(result);
         })
         // classes get
-        app.get('/classes', verifyUser, async (req, res) => {
+        app.get('/classes', async (req, res) => {
             const result = await classesCollection.find().toArray();
             res.send(result);
         });
+
+
+        app.get('/instructorClass', async (req, res) => {
+            const instructorRole = { role: 'instructor' };
+            if (!instructorRole) {
+                return res.status(500).send([]);
+            };
+            const user = await usersCollection.findOne(instructorRole);
+            const instructorEmail = user.email;
+            const email = { instructor_email: instructorEmail };
+            const result = await classesCollection.find(email).toArray();
+            console.log(result)
+            res.send(result);
+        })
 
         // update classes status approved
         app.put('/classes/:id', verifyUser, isAdmin, async (req, res) => {
@@ -114,6 +128,7 @@ async function run() {
             const result = await classesCollection.updateOne(filter, status);
             res.send(result);
         });
+
         // update classes status approved
         app.put('/classes/:id', verifyUser, isAdmin, async (req, res) => {
             const id = req.params.id;
@@ -128,7 +143,7 @@ async function run() {
         });
 
         // update class 
-        app.put('/classes', async (req, res) => {
+        app.put('/classes/:id', verifyUser, isInstructor, async (req, res) => {
             const classes = req.body;
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
@@ -159,9 +174,6 @@ async function run() {
 
         // get users
         app.get('/users', verifyUser, isAdmin, async (req, res) => {
-            // const users = req.body;
-            // const email = req.decoded.email;
-            // console.log(email)
             const result = await usersCollection.find().toArray();
             res.send(result);
         });
@@ -217,7 +229,7 @@ async function run() {
         });
 
         // instructors route 
-        app.get('/instructors', verifyUser, async (req, res) => {
+        app.get('/instructors', async (req, res) => {
             // const instructorEmail = await classesCollection.distinct('instructor', { role: 'instructor' });
             // const email = await usersCollection.find({ email: { $in: instructorEmail }, role: 'instructor' }).toArray();
             // const classInfo = await classesCollection.find({ instructor: { $in: instructorEmail } }).toArray();
@@ -239,7 +251,7 @@ async function run() {
 
         // -------------------------------------------------------------------bookings Classes--------------------------------------------------------
         // bookings class
-        app.post('/bookedClass', verifyUser, async (req, res) => {
+        app.post('/bookedClass', async (req, res) => {
             const bookedClass = req.body;
             const result = await bookingsClassCollection.insertOne(bookedClass);
             res.send(result);
@@ -248,7 +260,6 @@ async function run() {
         // get bookings  class 
         app.get('/bookedClass', verifyUser, async (req, res) => {
             const email = req.query.email;
-
             if (!email) {
                 return res.send([])
             }
@@ -259,7 +270,6 @@ async function run() {
             }
 
             const filter = { email: email };
-            console.log(filter)
             const result = await bookingsClassCollection.find(filter).toArray();
             res.send(result);
         });
