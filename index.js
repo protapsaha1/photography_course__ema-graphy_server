@@ -102,8 +102,8 @@ async function run() {
             res.send(result);
         });
 
-
-        app.get('/instructorClass', async (req, res) => {
+        //each instructors Own classes TODO verify user and inst
+        app.get('/instructorClass', verifyUser, isInstructor, async (req, res) => {
             const instructorRole = { role: 'instructor' };
             if (!instructorRole) {
                 return res.status(500).send([]);
@@ -113,7 +113,24 @@ async function run() {
             const email = { instructor_email: instructorEmail };
             const result = await classesCollection.find(email).toArray();
             res.send(result);
-        })
+        });
+
+        // update each instructorClass 
+        app.put('/instructorClass/:id', verifyUser, isInstructor, async (req, res) => {
+            const id = req.params.id;
+            const classes = req.body;
+            const query = { _id: new ObjectId(id) };
+            const option = { upsert: true };
+
+            const classInfo = {
+                $set: {
+                    class_name: classes.class_name, seats: classes.seats, price: classes.price
+                }
+            };
+
+            const result = await classesCollection.updateOne(query, classInfo, option);
+            res.send(result);
+        });
 
         // update classes status approved
         app.put('/classes/:id', verifyUser, isAdmin, async (req, res) => {
@@ -132,6 +149,13 @@ async function run() {
         app.put('/classes/:id', verifyUser, isAdmin, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
+            const defStatus = { status: 'pending' };
+            const approved = { status: 'approved' }
+            if (approved && !defStatus) {
+                return { status: 'approved' }
+            }
+            //Todo
+            // if (!approved && defStatus) {
             const status = {
                 $set: {
                     status: "denied"
@@ -139,24 +163,10 @@ async function run() {
             };
             const result = await classesCollection.updateOne(filter, status);
             res.send(result);
+            // }
         });
 
-        // update class 
-        app.put('/classes/:id', verifyUser, isInstructor, async (req, res) => {
-            const classes = req.body;
-            const id = req.params.id;
-            const query = { _id: new ObjectId(id) };
-            const option = { upsert: true };
 
-            const classInfo = {
-                $set: {
-                    class_name: classes.class_name, seats: classes.seats, price: classes.price
-                }
-            };
-
-            const result = await classesCollection.updateOne(query, classInfo, option);
-            res.send(result);
-        })
 
         // ---------------------------------------------------------------users------------------------------------------------------------
         // users post
@@ -178,7 +188,7 @@ async function run() {
         });
 
         // make admin
-        app.patch('/users/admin/:id', verifyUser, isAdmin, async (req, res) => {
+        app.patch('/users/admin/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
             const role = {
@@ -228,19 +238,20 @@ async function run() {
         });
 
         // instructors route 
-        app.post('/instructors', async (req, res) => {
+        app.get('/instructors', verifyUser, async (req, res) => {
             const instructorRole = { role: 'instructor' };
 
             if (!instructorRole) {
                 return res.status(500).send([]);
             };
 
-            const instructors = await usersCollection.find(instructorRole).toArray();
-            const results = await instructorsCollection.insertMany(instructors);
+            const results = await usersCollection.find(instructorRole).toArray();
+            // const results = await instructorsCollection.insertOne(instructors);
+            // console.log('data', results)
             res.send(results);
         });
 
-        app.get('/instructors', async (req, res) => {
+        app.get('/instructors', verifyUser, async (req, res) => {
             const results = await instructorsCollection.find().toArray();
             console.log('data', results)
             res.send(results);
@@ -281,11 +292,12 @@ async function run() {
 
 
         // -------------------------------------------------------------------Payment--------------------------------------------------------
+      
 
-
-        app.post('/payment', async (req, res) => {
+        app.post('/payment', verifyUser, async (req, res) => {
             const { price } = req.body;
             const amount = price * 100;
+            console.log(price, amount)
             const payment = await stripe.paymentIntents.create({
                 amount: amount,
                 currency: 'usd',
